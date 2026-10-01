@@ -61,7 +61,7 @@ echo "Zeitraum: " . min(array_column($records, 'Year'))
 
 // ── Ergebnis: $records ist das PHP-Array für den nächsten Schritt ────────
 // Beispiel: ersten 3 Datensätze ausgeben
-echo "\nBeispiel "alle Einträge":\n";
+echo "\n Beispiel: alle Einträge \n";
 for ($i = 0; $i < count($records); $i++) {
     $r = $records[$i];
     echo "  " . $r['Year'] . " | "
