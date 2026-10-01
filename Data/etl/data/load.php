@@ -1,14 +1,19 @@
 <?php
 /**
- * load.php – Transform-Daten in die SQLite-Datenbank schreiben.
+ * load.php – Transform-Daten in die Hostpoint-MySQL-Datenbank schreiben.
  */
 
 header('Content-Type: text/plain; charset=utf-8');
+
+// Die Projektdateien liegen drei Ordner über Data/etl/data.
+$projectDirectory = dirname(__DIR__, 3);
 
 // Das Ergebnis des Transforms holen und seine Kontrollausgaben ausblenden.
 ob_start();
 try {
     $result = include __DIR__ . '/transform.php';
+    $result = include __DIR__ . '/transform.php';
+    print_r($result);
 } finally {
     ob_end_clean();
 }
@@ -37,24 +42,27 @@ foreach ($rows as $index => $row) {
     }
 }
 
-// Datenbank und Schema liegen im Hauptordner des Projekts.
-$projectDirectory = dirname(__DIR__, 3);
-$dbFile = $projectDirectory . '/blumenimport.sqlite';
-$schemaFile = $projectDirectory . '/schema.sql';
+// Die Zugangsdaten bleiben in der ignorierten config.php.
+$configFile = $projectDirectory . '/config.php';
 
-if (!file_exists($schemaFile)) {
-    exit("schema.sql wurde nicht gefunden.\n");
+
+if (!file_exists($configFile)) {
+    exit("config.php wurde nicht gefunden.\n");
 }
 
-$schemaSql = file_get_contents($schemaFile);
-if ($schemaSql === false) {
-    exit("schema.sql konnte nicht gelesen werden.\n");
+
+
+require $configFile;
+
+if (!isset($dsn, $username, $password, $options) || !is_array($options)) {
+    exit("config.php enthaelt nicht die erwarteten Datenbank-Variablen.\n");
 }
+
+
 
 try {
-    $pdo = new PDO('sqlite:' . $dbFile);
+    $pdo = new PDO($dsn, $username, $password, $options);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec($schemaSql);
     echo "Verbindung steht.\n\n";
 } catch (PDOException $e) {
     exit('Verbindung oder Schema fehlgeschlagen: ' . $e->getMessage() . "\n");
@@ -63,7 +71,7 @@ try {
 // Die API liefert den vollständigen verfügbaren Zeitraum; deshalb wird der
 // Datenstand wie im Code-Along ersetzt, statt bei jedem Lauf Duplikate anzuhängen.
 $insert = $pdo->prepare(
-    'INSERT INTO import_records (species, origin, distance, amount, price, year)
+    'INSERT INTO import_records (species, origin, distance, amount, price, `year`)
      VALUES (:species, :origin, :distance, :amount, :price, :year)'
 );
 
@@ -96,12 +104,12 @@ echo count($rows) . " Zeilen geschrieben.\n\n";
 
 // Die Zeilenanzahl aus der Datenbank kontrollieren und aktuelle Einträge zeigen.
 $total = $pdo->query('SELECT COUNT(*) FROM import_records')->fetchColumn();
-echo "In import_records stehen jetzt {$total} Zeilen.\n\n";
+echo 'In import_records stehen jetzt ' . $total . " Zeilen.\n\n";
 
 $latestRecords = $pdo->query(
-    'SELECT origin, year, species, amount, price, distance
+    'SELECT origin, `year`, species, amount, price, distance
      FROM import_records
-     ORDER BY year DESC, origin
+     ORDER BY `year` DESC, origin
      LIMIT 5'
 );
 
