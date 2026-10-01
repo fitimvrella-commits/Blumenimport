@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS import_records;
-
-CREATE TABLE import_records (
+CREATE TABLE IF NOT EXISTS import_records (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     city TEXT NOT NULL DEFAULT 'Bern',
     species TEXT NOT NULL,
@@ -11,6 +9,6 @@ CREATE TABLE import_records (
     year INTEGER NOT NULL
 );
 
-CREATE INDEX idx_import_records_year ON import_records(year);
-CREATE INDEX idx_import_records_origin ON import_records(origin);
-CREATE INDEX idx_import_records_species ON import_records(species);
+CREATE INDEX IF NOT EXISTS idx_import_records_year ON import_records(year);
+CREATE INDEX IF NOT EXISTS idx_import_records_origin ON import_records(origin);
+CREATE INDEX IF NOT EXISTS idx_import_records_species ON import_records(species);
